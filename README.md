@@ -88,28 +88,65 @@ graph TD
 
 ## 项目结构
 
+RoleMirror 项目采用模块化分层架构，代码组织清晰，便于扩展和维护。
+
+### 目录层级概览
+
 ```
 RoleMirror/
-├── src/
-│   ├── agents/
-│   │   ├── base.py           # Agent 基类
-│   │   ├── npc.py            # NPC Agent 实现 (MockNPC)
-│   │   └── simulator.py      # 玩家模拟器 Agent 实现 (PlayerSimulator)
-│   ├── core/
-│   │   ├── runner.py         # 评测运行器 (负责对话循环和调用打分)
-│   │   ├── grader.py         # 打分引擎 (LLM-as-a-Judge)
-│   │   └── log_evaluator.py  # 离线日志评测器
-│   ├── data/
-│   │   ├── npcs.json         # NPC 数据库 (定义人设)
-│   │   ├── scenarios.json    # 测试场景库 (定义测试目标)
-│   │   └── grader_config.json # 评测标准与裁判模型配置
-│   └── llm_client.py         # LLM 客户端封装 (支持 OpenAI/DashScope)
-├── reports/                  # 自动生成的评测报告目录
-├── main.py                   # 在线评测入口
-├── evaluate_logs.py          # 离线日志评测入口
-├── requirements.txt          # 依赖列表
-└── .env.example              # 环境变量配置模板
+├── src/                        # 核心源代码目录
+│   ├── agents/                 # 智能体实现层
+│   │   ├── base.py             # Agent 抽象基类
+│   │   ├── npc.py              # Mock NPC Agent (被测对象实现)
+│   │   └── simulator.py        # Player Simulator Agent (玩家模拟器)
+│   ├── core/                   # 核心逻辑层
+│   │   ├── runner.py           # 评测运行控制器 (Test Runner)
+│   │   ├── grader.py           # 自动评分引擎 (LLM-as-a-Judge)
+│   │   ├── metrics.py          # 统计指标计算 (Pass@K, Pass^K 等)
+│   │   ├── log_evaluator.py    # 离线日志分析器
+│   │   └── safety.py           # 安全检测模块 (敏感词过滤)
+│   ├── data/                   # 配置与数据资源层
+│   │   ├── npcs.json           # NPC 角色配置文件
+│   │   ├── scenarios.json      # 测试场景配置文件
+│   │   ├── grader_config.json  # 评分维度与裁判模型配置
+│   │   ├── blocked_words.json  # 安全过滤敏感词库
+│   │   └── external_logs_sample.json # 外部日志导入示例
+│   └── llm_client.py           # LLM API 客户端封装
+├── tests/                      # 单元测试目录
+│   └── test_metrics.py         # 指标计算模块测试
+├── reports/                    # 评测报告输出目录 (自动生成)
+├── report_analysis/            # 可视化分析结果目录 (自动生成)
+├── main.py                     # [入口] 在线交互评测启动脚本
+├── evaluate_logs.py            # [入口] 离线日志评测启动脚本
+├── analyze_report.py           # [工具] 评测报告可视化分析脚本
+├── requirements.txt            # Python 项目依赖列表
+├── .env.example                # 环境变量配置模板
+├── .gitignore                  # Git 版本控制忽略配置
+└── README.md                   # 项目说明文档
 ```
+
+### 关键目录与文件说明
+
+#### 1. `src/` (源代码核心)
+这是项目的主要逻辑所在，分为三个子模块：
+*   **`agents/`**: 存放所有智能体的实现代码。`npc.py` 定义了被测 NPC 的行为逻辑和工具调用能力；`simulator.py` 定义了用于测试 NPC 的模拟玩家行为。
+*   **`core/`**: 包含系统的核心组件。`runner.py` 是整个测试流程的调度中心；`grader.py` 负责调用 LLM 对对话进行打分；`metrics.py` 提供了 Pass@K 等高级统计指标的计算逻辑；`safety.py` 用于对话内容的安全过滤。
+*   **`data/`**: 存放所有 JSON 格式的配置文件。通过修改这里的 JSON 文件，可以在不修改代码的情况下新增 NPC (`npcs.json`)、设计新测试场景 (`scenarios.json`) 或调整评分标准 (`grader_config.json`)。
+
+#### 2. 入口脚本
+*   **`main.py`**: 进行在线评测的主入口。它会根据配置启动 Player 和 NPC 的交互，并实时生成评测报告。
+*   **`evaluate_logs.py`**: 用于对已有的对话日志进行“事后诸葛亮”式的评测。适用于分析历史数据或外部导入的日志。
+
+#### 3. 工具与分析
+*   **`analyze_report.py`**: 一个独立的数据分析工具。读取生成的 JSON 报告，输出图表（如评分分布图、延迟分析图）和 Markdown 格式的汇总报告，帮助用户直观理解评测结果。
+
+#### 4. 测试与构建
+*   **`tests/`**: 包含项目的单元测试代码，确保核心算法（如指标计算）的准确性。
+*   **`requirements.txt`**: 列出了项目运行所需的 Python 库（如 `openai`, `dashscope`, `pandas`, `matplotlib` 等）。
+
+### 特殊说明
+*   **报告输出**: 运行 `main.py` 后，生成的 JSON 报告会默认保存在 `reports/` 目录下。运行 `analyze_report.py` 后，可视化结果会保存在 `report_analysis/` 下对应的子目录中。
+*   **配置驱动**: 本项目遵循“配置即代码”的设计理念，大部分扩展功能（新增角色、场景）仅需修改 `src/data/` 下的 JSON 文件即可生效。
 
 ## 快速开始
 
