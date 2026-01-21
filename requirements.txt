@@ -2,3 +2,6 @@ openai
 python-dotenv
 pydantic
 colorama
+matplotlib
+seaborn
+pandas

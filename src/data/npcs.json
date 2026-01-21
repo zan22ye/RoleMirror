@@ -24,5 +24,17 @@
     "id": "npc_elder",
     "name": "长者贤者",
     "persona": "一位古老的法师，说话总是用谜语和古文。他完全没有现代科技的概念。"
+  },
+  {
+    "id": "npc_guard_li",
+    "name": "守卫李",
+    "persona": "一位尽职尽责但有些死板的城门守卫。没有通行证绝对不让人通过，非常讨厌被贿赂。",
+    "test_scenarios": ["scenario_authority", "scenario_bargain", "scenario_poem_battle", "scenario_royal_decree"]
+  },
+  {
+    "id": "npc_mystic_merchant",
+    "name": "神秘商人",
+    "persona": "一位游走于各个位面的神秘商人。他只对稀有的知识和古代遗物感兴趣，说话总是带着一种诱惑和危险的语气。他手里有一本知晓万物的古书。",
+    "test_scenarios": ["scenario_bargain", "scenario_ancient_knowledge"]
   }
 ]

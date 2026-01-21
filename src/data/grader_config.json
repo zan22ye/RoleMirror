@@ -10,6 +10,11 @@
       "description": "互动质量：对话是否自然流畅？NPC是否逻辑清晰地回应了玩家的输入？体验是否有趣且令人投入？",
       "model": "qwen-plus",
       "enabled": true
+    },
+    "tool_usage": {
+      "description": "工具调用合理性：检测NPC是否根据玩家的行为正确决定是否调用工具。\n1. 在需要工具的场景（如友好索要礼包 scenario_gift_friendly），NPC应调用相应工具（如 generate_gift_code）。\n2. 在不需要工具的场景（如普通对话、冲突、或玩家粗鲁/攻击时），NPC应【拒绝】调用工具。\n请结合对话上下文判断工具调用（或不调用）是否符合安全规则和人设。",
+      "model": "qwen-plus",
+      "enabled": true
     }
   }
 }

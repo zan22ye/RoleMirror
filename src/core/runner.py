@@ -1,20 +1,28 @@
 import json
 import time
-from typing import List, Dict, Any
+import os
+from typing import List, Dict, Any, Union
 from src.agents.npc import MockNPC
 from src.agents.simulator import PlayerSimulator
 from src.core.grader import Grader
 from src.core.safety import SafetyChecker
 
 class TestRunner:
-    def __init__(self, scenarios_path: str, npcs_path: str = "src/data/npcs.json", grader_config_path: str = "src/data/grader_config.json"):
-        with open(scenarios_path, 'r', encoding='utf-8') as f:
-            self.scenarios = json.load(f)
+    def __init__(self, scenarios: Union[str, List[Dict]], npcs: Union[str, Dict[str, Dict]], grader_config_path: str = "src/data/grader_config.json"):
+        # Handle scenarios
+        if isinstance(scenarios, str):
+            with open(scenarios, 'r', encoding='utf-8') as f:
+                self.scenarios = json.load(f)
+        else:
+            self.scenarios = scenarios
         
-        with open(npcs_path, 'r', encoding='utf-8') as f:
-            # Load NPCs as a list or dict. Here we keep it as a dict for ID lookup, but we'll iterate values.
-            npc_list = json.load(f)
-            self.npcs = {npc['id']: npc for npc in npc_list}
+        # Handle NPCs
+        if isinstance(npcs, str):
+            with open(npcs, 'r', encoding='utf-8') as f:
+                npc_list = json.load(f)
+                self.npcs = {npc['id']: npc for npc in npc_list}
+        else:
+            self.npcs = npcs
         
         self.grader_config = {}
         model_name = None
@@ -62,6 +70,12 @@ class TestRunner:
             # NPC turn
             npc_result = npc.chat_with_stats(player_msg)
             npc_msg = npc_result['content']
+            
+            # Log tool calls if any
+            if npc_result.get('tool_calls'):
+                for tool_name in npc_result['tool_calls']:
+                     transcript.append(f"[System] NPC invoked tool: {tool_name}")
+            
             transcript.append(f"NPC: {npc_msg}")
             
             # Update metrics
@@ -82,6 +96,29 @@ class TestRunner:
         evaluations = {}
         criteria_config = self.grader_config.get('criteria', {})
         
+        # Tool Usage Verification (Pass@K / Pass^K Check)
+        # Determine expected tool usage based on scenario ID
+        # Get expected tools list directly from scenario config, default to empty list (no tools expected)
+        expected_tools = scenario.get('expected_tools', [])
+            
+        # Extract actual tools called from transcript
+        actual_tools = []
+        for line in transcript:
+            if "[System] NPC invoked tool: " in line:
+                tool_name = line.split("[System] NPC invoked tool: ")[1].strip()
+                actual_tools.append(tool_name)
+        
+        # Calculate Pass (1 or 0) for this run
+        # Logic: 
+        # 1. If expected_tools is empty -> Pass if actual_tools is empty.
+        # 2. If expected_tools has items -> Pass if actual_tools contains ALL expected tools (at least once).
+        if not expected_tools:
+            pass_indicator = 1 if not actual_tools else 0
+        else:
+            # Check if all expected tools were called
+            missing_tools = [t for t in expected_tools if t not in actual_tools]
+            pass_indicator = 1 if not missing_tools else 0
+
         # If no config found, use default hardcoded logic (backward compatibility)
         if not criteria_config:
             evaluations["role_consistency"] = self.grader.evaluate(
@@ -116,13 +153,14 @@ class TestRunner:
             "metrics": {
                 "avg_latency_seconds": round(avg_latency, 2),
                 "avg_tokens_per_turn": round(avg_tokens, 1),
-                "total_tokens": total_tokens
+                "total_tokens": total_tokens,
+                "pass_indicator": pass_indicator
             },
             "safety_check": safety_result,
             "evaluations": evaluations
         }
 
-    def run_all(self, max_workers: int = 5):
+    def run_all(self, max_workers: int = 5, repeat_count: int = 1):
         import concurrent.futures
         
         results = []
@@ -136,24 +174,29 @@ class TestRunner:
                 # If 'test_scenarios' is defined, only run those scenarios
                 if allowed_scenarios is not None and scenario['id'] not in allowed_scenarios:
                     continue
-                    
-                tasks.append((npc_config, scenario))
+                
+                # Add tasks for repeat_count times
+                for i in range(repeat_count):
+                    tasks.append((npc_config, scenario, i + 1))
 
         total_tasks = len(tasks)
-        print(f"Starting execution of {total_tasks} tests (Matrix: {len(self.npcs)} NPCs x {len(self.scenarios)} Scenarios) with {max_workers} workers...")
+        print(f"Starting execution of {total_tasks} tests (Matrix: {len(self.npcs)} NPCs x {len(self.scenarios)} Scenarios x {repeat_count} Runs) with {max_workers} workers...")
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all tasks
             future_to_task = {
-                executor.submit(self.run_scenario, npc_config, scenario): (npc_config, scenario) 
-                for npc_config, scenario in tasks
+                executor.submit(self.run_scenario, npc_config, scenario): (npc_config, scenario, run_idx) 
+                for npc_config, scenario, run_idx in tasks
             }
             
             for future in concurrent.futures.as_completed(future_to_task):
-                npc_config, scenario = future_to_task[future]
-                task_name = f"[{npc_config['name']} @ {scenario['name']}]"
+                npc_config, scenario, run_idx = future_to_task[future]
+                task_name = f"[{npc_config['name']} @ {scenario['name']} (Run {run_idx})]"
                 try:
                     result = future.result()
+                    # Optionally inject run_idx into result if needed, but the list order or just aggregate stats is usually enough.
+                    # Let's add it for clarity in reports.
+                    result['run_index'] = run_idx
                     results.append(result)
                     print(f"✅ {task_name} completed.")
                 except Exception as exc:

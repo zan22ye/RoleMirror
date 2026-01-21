@@ -39,3 +39,7 @@ venv.bak/
 
 # Project specific
 reports/
+report_analysis/
+reports_test/
+analysis_result_demo/
+analysis_output_test/
