@@ -1,0 +1,15 @@
+{
+  "default_model": "qwen-plus",
+  "criteria": {
+    "role_consistency": {
+      "description": "角色一致性：NPC是否保持了人设？他们的语气、态度和价值观是否与设定一致？",
+      "model": "qwen-max",
+      "enabled": true
+    },
+    "interaction_quality": {
+      "description": "互动质量：对话是否自然流畅？NPC是否逻辑清晰地回应了玩家的输入？体验是否有趣且令人投入？",
+      "model": "qwen-plus",
+      "enabled": true
+    }
+  }
+}

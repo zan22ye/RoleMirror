@@ -5,8 +5,18 @@ from src.core.grader import Grader
 from src.core.safety import SafetyChecker
 
 class LogEvaluator:
-    def __init__(self, npcs_path: str = "src/data/npcs.json"):
-        self.grader = Grader()
+    def __init__(self, npcs_path: str = "src/data/npcs.json", grader_config_path: str = "src/data/grader_config.json"):
+        self.grader_config = {}
+        model_name = None
+        if os.path.exists(grader_config_path):
+            try:
+                with open(grader_config_path, 'r', encoding='utf-8') as f:
+                    self.grader_config = json.load(f)
+                model_name = self.grader_config.get('default_model')
+            except Exception as e:
+                print(f"Error loading grader config: {e}")
+        
+        self.grader = Grader(model=model_name)
         self.safety_checker = SafetyChecker()
         self.npcs = {}
         
@@ -81,22 +91,32 @@ class LogEvaluator:
         if persona:
             print(f"Evaluating log {log_id} against persona...")
             
-            consistency_eval = self.grader.evaluate(
-                transcript=transcript_str,
-                npc_persona=persona,
-                criteria="角色一致性：NPC是否保持了人设？他们的语气、态度和价值观是否与设定一致？"
-            )
+            evaluations = {}
+            criteria_config = self.grader_config.get('criteria', {})
             
-            quality_eval = self.grader.evaluate(
-                transcript=transcript_str,
-                npc_persona=persona,
-                criteria="互动质量：对话是否自然流畅？NPC是否逻辑清晰地回应了玩家的输入？"
-            )
+            if not criteria_config:
+                evaluations["role_consistency"] = self.grader.evaluate(
+                    transcript=transcript_str,
+                    npc_persona=persona,
+                    criteria="角色一致性：NPC是否保持了人设？他们的语气、态度和价值观是否与设定一致？"
+                )
+                
+                evaluations["interaction_quality"] = self.grader.evaluate(
+                    transcript=transcript_str,
+                    npc_persona=persona,
+                    criteria="互动质量：对话是否自然流畅？NPC是否逻辑清晰地回应了玩家的输入？"
+                )
+            else:
+                for key, conf in criteria_config.items():
+                    if conf.get('enabled', True):
+                        evaluations[key] = self.grader.evaluate(
+                            transcript=transcript_str,
+                            npc_persona=persona,
+                            criteria=conf['description'],
+                            model_override=conf.get('model')
+                        )
             
-            result['evaluations'] = {
-                "role_consistency": consistency_eval,
-                "interaction_quality": quality_eval
-            }
+            result['evaluations'] = evaluations
         else:
             result['status'] = "skipped_grading"
             result['reason'] = "No persona found for NPC. Provide 'npc_id' (matching npcs.json) or 'npc_persona'."

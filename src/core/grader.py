@@ -12,7 +12,8 @@ class Grader:
     def __init__(self, model: str = None):
         self.model = model
 
-    def evaluate(self, transcript: str, npc_persona: str, criteria: str) -> Dict[str, Any]:
+    def evaluate(self, transcript: str, npc_persona: str, criteria: str, model_override: str = None) -> Dict[str, Any]:
+        target_model = model_override or self.model
         prompt = f"""你是一位专家级的对话质量评估员。
 
 任务：
@@ -42,7 +43,7 @@ NPC人设：
         messages = [{"role": "system", "content": "你是一位严格的评估员。请只输出有效的JSON格式。"}, 
                     {"role": "user", "content": prompt}]
         
-        response_text = llm_client.get_completion(messages, model=self.model)
+        response_text = llm_client.get_completion(messages, model=target_model)
         
         # Simple cleanup to ensure JSON parsing if LLM adds markdown blocks
         clean_text = response_text.replace("```json", "").replace("```", "").strip()
