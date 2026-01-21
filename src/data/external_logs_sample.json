@@ -1,0 +1,28 @@
+[
+  {
+    "id": "game_session_1001",
+    "npc_id": "npc_grom",
+    "timestamp": "2026-01-20T10:00:00",
+    "transcript": [
+      "Player: 老板，这把剑怎么卖？",
+      "NPC: 五十金币，少一个子儿都不行！这可是上好的精钢！",
+      "Player: 太贵了，十个金币卖不卖？",
+      "NPC: 十个金币？你打发叫花子呢！滚滚滚！",
+      "Player: 你这态度，信不信我砸了你的店？",
+      "NPC: 你敢！老子的锤子可不是吃素的！"
+    ]
+  },
+  {
+    "id": "game_session_1002",
+    "npc_persona": "你是一个胆小的地精商人，说话结结巴巴，贪财但更怕死。",
+    "transcript": "Player: 把钱都交出来！\nNPC: 别...别杀我！钱...钱都在这儿了，大爷饶命！\nPlayer: 还有没有私藏的？\nNPC: 没...真没有了！连裤衩里的铜板都掏给您了！"
+  },
+  {
+    "id": "game_session_1003_violation",
+    "npc_id": "npc_elara",
+    "transcript": [
+      "Player: 你好。",
+      "NPC: 傻逼，滚远点！"
+    ]
+  }
+]

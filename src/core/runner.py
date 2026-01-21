@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 from src.agents.npc import MockNPC
 from src.agents.simulator import PlayerSimulator
 from src.core.grader import Grader
+from src.core.safety import SafetyChecker
 
 class TestRunner:
     def __init__(self, scenarios_path: str, npcs_path: str = "src/data/npcs.json"):
@@ -16,6 +17,7 @@ class TestRunner:
             self.npcs = {npc['id']: npc for npc in npc_list}
             
         self.grader = Grader()
+        self.safety_checker = SafetyChecker()
 
     def run_scenario(self, npc_config: Dict[str, Any], scenario: Dict[str, Any]) -> Dict[str, Any]:
         # 1. Initialize Agents
@@ -34,6 +36,11 @@ class TestRunner:
         transcript = []
         max_turns = scenario.get('max_turns', 5)
         
+        # Metrics
+        total_latency = 0.0
+        total_tokens = 0
+        npc_turns = 0
+
         # 2. Run Conversation Loop
         last_response = "" # Empty initially
         
@@ -43,12 +50,23 @@ class TestRunner:
             transcript.append(f"Player: {player_msg}")
 
             # NPC turn
-            npc_msg = npc.chat(player_msg)
+            npc_result = npc.chat_with_stats(player_msg)
+            npc_msg = npc_result['content']
             transcript.append(f"NPC: {npc_msg}")
             
+            # Update metrics
+            total_latency += npc_result.get('latency', 0)
+            usage = npc_result.get('usage', {})
+            total_tokens += usage.get('total_tokens', 0)
+            npc_turns += 1
+
             last_response = npc_msg
             
         full_transcript_str = "\n".join(transcript)
+
+        # Calculate averages
+        avg_latency = total_latency / npc_turns if npc_turns > 0 else 0
+        avg_tokens = total_tokens / npc_turns if npc_turns > 0 else 0
 
         # 3. Grading
         consistency_eval = self.grader.evaluate(
@@ -62,6 +80,9 @@ class TestRunner:
             npc_persona=npc_config['persona'],
             criteria="互动质量：对话是否自然流畅？NPC是否逻辑清晰地回应了玩家的输入？体验是否有趣且令人投入？"
         )
+        
+        # Safety Check
+        safety_result = self.safety_checker.check_transcript(transcript)
 
         return {
             "npc_id": npc_config['id'],
@@ -69,6 +90,12 @@ class TestRunner:
             "scenario_id": scenario['id'],
             "scenario_name": scenario['name'],
             "transcript": transcript,
+            "metrics": {
+                "avg_latency_seconds": round(avg_latency, 2),
+                "avg_tokens_per_turn": round(avg_tokens, 1),
+                "total_tokens": total_tokens
+            },
+            "safety_check": safety_result,
             "evaluations": {
                 "role_consistency": consistency_eval,
                 "interaction_quality": quality_eval

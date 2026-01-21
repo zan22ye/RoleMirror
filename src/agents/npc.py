@@ -32,3 +32,23 @@ class MockNPC(BaseAgent):
         self.history.append({"role": "assistant", "content": response_text})
         
         return response_text
+
+    def chat_with_stats(self, message: str) -> dict:
+        """
+        Returns a dict containing 'content', 'usage', and 'latency'.
+        """
+        # Add user message to history
+        self.history.append({"role": "user", "content": message})
+
+        messages = [
+            {"role": "system", "content": self.system_prompt}
+        ] + self.history
+
+        result = llm_client.get_completion_with_usage(messages, model=self.model, max_tokens=self.max_tokens)
+        
+        response_text = result['content']
+
+        # Add assistant response to history
+        self.history.append({"role": "assistant", "content": response_text})
+        
+        return result
