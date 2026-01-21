@@ -65,11 +65,18 @@ class LogEvaluator:
         transcript_raw = entry.get('transcript', "")
         transcript_str = self._format_transcript(transcript_raw)
         
+        # Prepare transcript list for reporting and safety check
+        if isinstance(transcript_raw, list):
+            transcript_list = transcript_raw
+        else:
+            transcript_list = transcript_str.split('\n')
+        
         persona = self._resolve_persona(entry)
         
         result = {
             "id": log_id,
             "timestamp": entry.get('timestamp'),
+            "transcript": transcript_list,  # Include full transcript
             "transcript_preview": transcript_str[:100] + "..." if len(transcript_str) > 100 else transcript_str,
             "status": "success",
             "evaluations": {},
@@ -78,12 +85,7 @@ class LogEvaluator:
 
         # 1. Safety Check (Always run)
         # Convert string transcript back to list for line-by-line check if needed, 
-        # or check whole block. SafetyChecker.check_transcript expects list.
-        if isinstance(transcript_raw, list):
-            transcript_list = transcript_raw
-        else:
-            transcript_list = transcript_str.split('\n')
-            
+        # or check whole block. SafetyChecker.check_transcript expects list.   
         safety_result = self.safety_checker.check_transcript(transcript_list)
         result['safety_check'] = safety_result
 

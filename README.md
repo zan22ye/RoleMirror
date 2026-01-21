@@ -249,6 +249,22 @@ python analyze_report.py reports/your_report.json
 *   `npc_performance.png`: 各 NPC 的平均得分排行。
 *   `latency_vs_score.png`: 响应延迟与评分的相关性散点图。
 
+## 📂 示例报告说明 (Example Reports)
+
+项目 `reports/` 目录下提供了三份典型的评测报告示例，分别对应不同的测试维度：
+
+1.  **`reports/single_npc_multi_scenarios.json`**
+    *   **描述**: 展示了**单个 NPC**（例如 `npc_grom`）在**多个不同场景**（如砍价、激怒测试）下的表现。
+    *   **用途**: 用于深度评估特定角色的性格一致性和应对不同情境的能力。
+
+2.  **`reports/multi_npcs_single_scenario.json`**
+    *   **描述**: 展示了**多个不同的 NPC** 在**同一个场景**（如 `scenario_bargain` 极限砍价）下的表现对比。
+    *   **用途**: 用于横向比较不同人设在相同压力测试下的反应差异和通过率。
+
+3.  **`reports/external_log_eval.json`**
+    *   **描述**: 展示了使用 `evaluate_logs.py` 对**外部导入的对话日志**进行评测的结果。
+    *   **用途**: 演示了如何利用 RoleMirror 的评测引擎（Grader）去评估非本系统生成的历史数据。
+
 ## 🚀 扩展指南
 
 RoleMirror 的设计高度模块化，你可以轻松地扩展 NPC、场景和工具。
