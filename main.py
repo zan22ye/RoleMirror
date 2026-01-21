@@ -9,6 +9,7 @@ def main():
     parser.add_argument("--scenarios", type=str, default="src/data/scenarios.json", help="Path to scenarios JSON file")
     parser.add_argument("--npcs", type=str, default="src/data/npcs.json", help="Path to NPCs JSON file")
     parser.add_argument("--output", type=str, default="reports", help="Directory to save reports")
+    parser.add_argument("--concurrency", type=int, default=5, help="Number of concurrent scenarios to run")
     args = parser.parse_args()
 
     # Ensure output directory exists
@@ -18,7 +19,7 @@ def main():
     runner = TestRunner(args.scenarios, args.npcs)
     
     start_time = datetime.now()
-    results = runner.run_all()
+    results = runner.run_all(max_workers=args.concurrency)
     end_time = datetime.now()
     
     duration = (end_time - start_time).total_seconds()

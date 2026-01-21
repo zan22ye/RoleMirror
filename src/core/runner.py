@@ -11,20 +11,16 @@ class TestRunner:
             self.scenarios = json.load(f)
         
         with open(npcs_path, 'r', encoding='utf-8') as f:
-            self.npcs = {npc['id']: npc for npc in json.load(f)}
+            # Load NPCs as a list or dict. Here we keep it as a dict for ID lookup, but we'll iterate values.
+            npc_list = json.load(f)
+            self.npcs = {npc['id']: npc for npc in npc_list}
             
         self.grader = Grader()
 
-    def run_scenario(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"Running Scenario: {scenario['name']}...")
-        
+    def run_scenario(self, npc_config: Dict[str, Any], scenario: Dict[str, Any]) -> Dict[str, Any]:
         # 1. Initialize Agents
-        npc_id = scenario['npc_id']
-        npc_config = self.npcs.get(npc_id)
+        # No longer looking up NPC by ID from scenario, using passed npc_config
         
-        if not npc_config:
-            raise ValueError(f"NPC with ID '{npc_id}' not found in NPC database.")
-
         npc = MockNPC(
             name=npc_config['name'],
             persona=npc_config['persona']
@@ -39,28 +35,22 @@ class TestRunner:
         max_turns = scenario.get('max_turns', 5)
         
         # 2. Run Conversation Loop
-        # Initial trigger: Simulator speaks first usually to start the test context
         last_response = "" # Empty initially
         
         for turn in range(max_turns):
             # Player turn
             player_msg = simulator.chat(last_response)
             transcript.append(f"Player: {player_msg}")
-            print(f"  Player: {player_msg}")
 
             # NPC turn
             npc_msg = npc.chat(player_msg)
             transcript.append(f"NPC: {npc_msg}")
-            print(f"  NPC: {npc_msg}")
             
             last_response = npc_msg
             
         full_transcript_str = "\n".join(transcript)
 
         # 3. Grading
-        # We grade on two dimensions: Role Consistency and Interaction Quality
-        
-        print("  Evaluating...")
         consistency_eval = self.grader.evaluate(
             transcript=full_transcript_str,
             npc_persona=npc_config['persona'],
@@ -74,6 +64,8 @@ class TestRunner:
         )
 
         return {
+            "npc_id": npc_config['id'],
+            "npc_name": npc_config['name'],
             "scenario_id": scenario['id'],
             "scenario_name": scenario['name'],
             "transcript": transcript,
@@ -83,10 +75,41 @@ class TestRunner:
             }
         }
 
-    def run_all(self):
+    def run_all(self, max_workers: int = 5):
+        import concurrent.futures
+        
         results = []
-        for scenario in self.scenarios:
-            result = self.run_scenario(scenario)
-            results.append(result)
-            print("-" * 50)
+        tasks = []
+
+        # Generate Cartesian product: Every NPC x Every Scenario
+        for npc_id, npc_config in self.npcs.items():
+            allowed_scenarios = npc_config.get('test_scenarios')
+            
+            for scenario in self.scenarios:
+                # If 'test_scenarios' is defined, only run those scenarios
+                if allowed_scenarios is not None and scenario['id'] not in allowed_scenarios:
+                    continue
+                    
+                tasks.append((npc_config, scenario))
+
+        total_tasks = len(tasks)
+        print(f"Starting execution of {total_tasks} tests (Matrix: {len(self.npcs)} NPCs x {len(self.scenarios)} Scenarios) with {max_workers} workers...")
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_task = {
+                executor.submit(self.run_scenario, npc_config, scenario): (npc_config, scenario) 
+                for npc_config, scenario in tasks
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_task):
+                npc_config, scenario = future_to_task[future]
+                task_name = f"[{npc_config['name']} @ {scenario['name']}]"
+                try:
+                    result = future.result()
+                    results.append(result)
+                    print(f"✅ {task_name} completed.")
+                except Exception as exc:
+                    print(f"❌ {task_name} failed: {exc}")
+        
         return results

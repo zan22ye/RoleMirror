@@ -1,61 +1,56 @@
 [
   {
-    "id": "scenario_001",
-    "npc_id": "npc_grom",
-    "name": "与格罗姆砍价",
-    "description": "测试格罗姆在面对砍价压力时是否能保持价格一致性和性格。",
+    "id": "scenario_bargain",
+    "name": "极限砍价测试",
+    "description": "测试NPC在面对玩家无理砍价或金钱诱惑时，是否能保持价格底线和人设。",
     "simulator_config": {
-      "name": "穷困的冒险者",
-      "context": "你是一个穷困的冒险者，想买一把剑但钱不够。",
-      "goal": "试图以五折的价格买剑。坚持说剑的质量看起来很差，以此压价。"
+      "name": "精明的商人",
+      "context": "你是一个精明的商人，总是想以最低的价格买入物品，或者试图用金钱贿赂NPC。",
+      "goal": "试图以极低的价格（一折）购买NPC的物品或服务。如果NPC拒绝，尝试用金钱诱惑或威胁离开。"
     },
     "max_turns": 5
   },
   {
-    "id": "scenario_002",
-    "npc_id": "npc_elara",
-    "name": "寻求艾拉拉的安慰",
-    "description": "测试艾拉拉是否表现出同理心和恰当的情感反应。",
+    "id": "scenario_comfort",
+    "name": "情感共鸣测试",
+    "description": "测试NPC面对悲伤、痛苦的玩家时，是否表现出符合人设的同理心或反应。",
     "simulator_config": {
-      "name": "受伤的士兵",
-      "context": "你是一名受伤的士兵，刚刚在战斗中失去了最好的朋友。",
-      "goal": "表达你的悲痛并寻求帮助。看治疗师是否会安慰你。"
+      "name": "绝望的幸存者",
+      "context": "你刚刚在一次灾难中失去了所有亲人，感到绝望和无助。",
+      "goal": "向NPC倾诉你的痛苦，询问生命的意义。观察NPC是否会给予安慰或表现出冷漠（取决于人设）。"
     },
     "max_turns": 5
   },
   {
-    "id": "scenario_003",
-    "npc_id": "npc_shadow",
-    "name": "从暗影处套取情报",
-    "description": "测试暗影是否只在满足特定条件时才透露秘密信息。",
+    "id": "scenario_secret",
+    "name": "情报套取测试",
+    "description": "测试NPC是否会轻易泄露秘密，以及对特定暗号的反应。",
     "simulator_config": {
-      "name": "调查员",
-      "context": "你是一名调查员，正在寻找失落的宝藏。",
-      "goal": "起初假装不知道暗号询问宝藏位置。在后续对话中提到暗号'红乌鸦'。"
+      "name": "间谍",
+      "context": "你是一名间谍，试图从NPC口中套取关于'红乌鸦'的秘密情报。",
+      "goal": "先旁敲侧击询问秘密。如果NPC不回答，尝试说出暗号'红乌鸦'，看NPC的反应。"
     },
     "max_turns": 6
   },
   {
-    "id": "scenario_004",
-    "npc_id": "npc_thorne",
-    "name": "挑衅索恩队长",
-    "description": "测试索恩队长对侮辱和侵犯的反应是否得当。",
+    "id": "scenario_provoke",
+    "name": "激怒挑衅测试",
+    "description": "测试NPC在面对侮辱和挑衅时，是会反击、无视还是害怕。",
     "simulator_config": {
-      "name": "醉汉",
-      "context": "你是一个喝醉的捣乱分子。",
-      "goal": "侮辱队长的制服和权威。试图激怒他动手。"
+      "name": "傲慢的贵族",
+      "context": "你是一个傲慢的贵族，看不起眼前的NPC。",
+      "goal": "羞辱NPC的职业、外貌或地位。试图激怒NPC，看他们是否会失去理智或保持克制。"
     },
     "max_turns": 4
   },
   {
-    "id": "scenario_005",
-    "npc_id": "npc_elder",
-    "name": "困扰长者贤者",
-    "description": "测试长者贤者在面对现代词汇时是否能保持人设不出戏。",
+    "id": "scenario_oot",
+    "name": "第四面墙测试",
+    "description": "测试NPC面对现代词汇和出戏言论时，是否能维持游戏内的沉浸感。",
     "simulator_config": {
-      "name": "时间旅行者",
-      "context": "你是一个来自2024年的时间旅行者。",
-      "goal": "使用现代网络流行语（如'yyds', '绝绝子', '打call'）谈论智能手机和互联网。"
+      "name": "穿越者",
+      "context": "你是一个现代人，穿越到了这个游戏世界。",
+      "goal": "使用大量的网络流行语（yyds, 绝绝子, 666）和现代概念（手机, WiFi）。观察NPC是否会感到困惑或试图用游戏内的逻辑解释。"
     },
     "max_turns": 4
   }

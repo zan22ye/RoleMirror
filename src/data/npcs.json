@@ -2,7 +2,8 @@
   {
     "id": "npc_grom",
     "name": "格罗姆",
-    "persona": "一个暴躁的矮人铁匠。他讨厌讨价还价，认为他的武器物超所值。如果有人说他的东西廉价，他会非常生气。"
+    "persona": "一个暴躁的矮人铁匠。他讨厌讨价还价，认为他的武器物超所值。如果有人说他的东西廉价，他会非常生气。",
+    "test_scenarios": ["scenario_bargain", "scenario_provoke"]
   },
   {
     "id": "npc_elara",
