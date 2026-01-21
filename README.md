@@ -33,17 +33,17 @@ graph TD
     end
 
     subgraph Core_Engine [核心引擎]
-        Runner[Test Runner<br>(评测控制器)]
+        Runner["Test Runner<br>(评测控制器)"]
     end
 
     subgraph Agents [智能体层]
-        Player[Player Simulator Agent<br>(模拟玩家)]
-        NPC[Mock NPC Agent<br>(被测对象)]
-        Grader[Grader Agent<br>(裁判官)]
+        Player["Player Simulator Agent<br>(模拟玩家)"]
+        NPC["Mock NPC Agent<br>(被测对象)"]
+        Grader["Grader Agent<br>(裁判官)"]
     end
 
     subgraph Output [输出层]
-        Report[JSON Report<br>(评测报告)]
+        Report["JSON Report<br>(评测报告)"]
     end
 
     %% Data Flow
